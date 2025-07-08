@@ -1,20 +1,12 @@
 import streamlit as st
 import os
-from utils import (
-    transcribe_audio,
-    summarize_text,
-    extract_action_points,
-    generate_pdf,
-    analyze_sentiment,
-    embed_transcript,
-    ask_question
-)
+from utils import transcribe_audio, summarize_text, extract_action_points, analyze_sentiment, generate_pdf
 
-# Ensure folders exist
+# Create folders if not exist
 os.makedirs("sample_audio", exist_ok=True)
 os.makedirs("output", exist_ok=True)
 
-# Custom page styling
+# Custom Streamlit header
 st.markdown("""
     <style>
     .main-title {
@@ -33,18 +25,18 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown("<div class='main-title'>🎙️ AI Meeting Minutes Generator</div>", unsafe_allow_html=True)
-st.markdown("<div class='subtitle'>Transcribe audio, summarize key points, extract actions, analyze tone & ask questions about your meeting.</div>", unsafe_allow_html=True)
+st.markdown("<div class='subtitle'>Transcribe audio, summarize key points, extract action items, analyze tone, and download a PDF report.</div>", unsafe_allow_html=True)
 
-# Sidebar settings
+# Sidebar
 with st.sidebar:
     st.header("⚙️ Settings")
     st.markdown("Upload a meeting recording in mp3, wav, m4a, or mp4 format.")
-    st.markdown("Results will include summary, action items, sentiment, and chatbot Q&A.")
+    st.markdown("Results will include summary, action items, sentiment, and downloadable report.")
 
-# Upload section
+# File upload
 uploaded_file = st.file_uploader("📤 Upload your audio file", type=["mp3", "wav", "m4a", "mp4"])
 
-if uploaded_file is not None:
+if uploaded_file:
     audio_path = os.path.join("sample_audio", uploaded_file.name)
 
     with open(audio_path, "wb") as f:
@@ -52,62 +44,46 @@ if uploaded_file is not None:
 
     st.success("✅ File uploaded successfully!")
 
-    with st.spinner("🔄 Transcribing audio..."):
+    with st.spinner("🔄 Transcribing..."):
         transcript = transcribe_audio(audio_path)
 
     st.subheader("🔤 Transcript")
     st.write(transcript)
 
-    with st.spinner("📚 Summarizing transcript..."):
+    with st.spinner("📚 Summarizing..."):
         summary = summarize_text(transcript)
 
     st.subheader("📌 Summary")
     st.info(summary)
 
-    with st.spinner("🧠 Extracting action items..."):
+    with st.spinner("🧠 Extracting Action Items..."):
         action_points = extract_action_points(transcript)
 
     st.subheader("✅ Action Items")
     st.code(action_points, language="markdown")
 
-    with st.spinner("📊 Analyzing meeting sentiment..."):
+    with st.spinner("📊 Analyzing Sentiment..."):
         sentiment = analyze_sentiment(transcript)
 
-    st.subheader("📈 Sentiment Analysis")
-    if "Positive" in sentiment:
-        st.success(sentiment)
-    elif "Negative" in sentiment:
-        st.error(sentiment)
-    else:
-        st.warning(sentiment)
+    st.subheader("📈 Sentiment")
+    st.success(sentiment)
 
-    # Save as .txt
-    output_file = os.path.join("output", f"{uploaded_file.name}.txt")
-    with open(output_file, "w", encoding="utf-8") as f:
+    # Save text output
+    output_path = os.path.join("output", f"{uploaded_file.name}.txt")
+    with open(output_path, "w", encoding="utf-8") as f:
         f.write("TRANSCRIPTION:\n" + transcript + "\n\n")
         f.write("SUMMARY:\n" + summary + "\n\n")
         f.write("ACTION ITEMS:\n" + action_points + "\n\n")
         f.write("SENTIMENT:\n" + sentiment)
 
-    st.success("✅ All processing complete! Results saved to output/ folder.")
+    st.success("✅ All done! Output saved to 'output/' folder.")
 
     # PDF download
-    st.markdown("### 📥 Download PDF Report")
+    st.markdown("### 📥 Download PDF")
     pdf_file = generate_pdf(summary, transcript, action_points, sentiment)
     st.download_button(
-        label="⬇️ Download PDF",
+        label="⬇️ Download Report",
         data=pdf_file,
         file_name="meeting_minutes.pdf",
         mime="application/pdf"
     )
-
-    # Chatbot section
-    st.markdown("### 🤖 Ask Questions About the Meeting")
-    chunks, embeddings, index, embed_model = embed_transcript(transcript)
-    user_question = st.text_input("What would you like to ask?", placeholder="e.g. What are the next steps?")
-
-    if user_question:
-        with st.spinner("Thinking..."):
-            answer = ask_question(user_question, chunks, embeddings, index, embed_model)
-            st.success("Answer:")
-            st.write(answer)

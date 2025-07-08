@@ -1,0 +1,9 @@
+streamlit
+openai>=1.0.0
+transformers
+torch
+whisper
+sentence-transformers
+faiss-cpu
+python-dotenv
+reportlab
