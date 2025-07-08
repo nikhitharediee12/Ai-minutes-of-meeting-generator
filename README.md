@@ -6,6 +6,8 @@ An AI-powered tool that transcribes your meeting audio, summarizes key points, e
 
 ---
 
+## 🚀 Live Demo
+👉 [Click here to use the app](https://nikhitharediee12-ai-minutes-of-meeting-generator.streamlit.app)
 ## 🚀 Features
 
 - 🎤 **Audio Transcription** — powered by [Whisper](https://github.com/openai/whisper)
